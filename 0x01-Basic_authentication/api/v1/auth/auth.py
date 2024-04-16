@@ -20,16 +20,22 @@ class Auth:
             return True
 
         end_character = path[-1]
+        new_path = ''
         if end_character == '/':
-            print(end_character)
             return False
-        if path in excluded_paths:
+        else:
+            new_path = path + '/'
+        if new_path in excluded_paths:
             return False
         return True
 
     def authorization_header(self, request=None) -> str:
         """Get the authorization headers
         """
+        if request is None:
+            return None
+        if 'Authorization' in request.headers:
+            return request.headers['Authorization']
         return None
 
     def current_user(self, request=None) -> TypeVar('User'):
