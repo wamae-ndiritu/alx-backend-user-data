@@ -5,7 +5,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.session import Session
-from sqlalchemy.exc import InvalidRequestError, IntegrityError
+from sqlalchemy.exc import InvalidRequestError, IntegrityError, SQLAlchemyError
 from sqlalchemy.orm.exc import NoResultFound
 
 from user import Base, User
@@ -49,7 +49,7 @@ class DB:
         """
         Find a user by a specified criteria
 
-        Args: 
+        Args:
             **kwargs: Arbitrary keyword arguments representing query criteria
 
         Returns:
@@ -64,6 +64,9 @@ class DB:
             if user is None:
                 raise NoResultFound
             return user
+        except NoResultFound as error:
+            self._session.rollback()
+            raise NoResultFound
         except InvalidRequestError as e:
             self._session.rollback()
-            raise InvalidRequestError("Invalid query arguments") from e
+            raise InvalidRequestError
