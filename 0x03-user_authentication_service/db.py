@@ -71,7 +71,7 @@ class DB:
             self._session.rollback()
             raise InvalidRequestError
 
-    def update_user(self, user_id: str, **kwargs) -> None:
+    def update_user(self, user_id: int, **kwargs) -> None:
         """
         Update the user specified
 
