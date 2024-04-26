@@ -5,6 +5,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.session import Session
+from sqlalchemy.exc import InvalidRequestError, IntegrityError
+from sqlalchemy.orm.exc import NoResultFound
 
 from user import Base, User
 
@@ -35,6 +37,33 @@ class DB:
         Save the user to the database
         """
         user = User(email=email, hashed_password=hashed_password)
-        self._session.add(user)
-        self._session.commit()
+        try:
+            self._session.add(user)
+            self._session.commit()
+        except IntegrityError:
+            self._session.rollback()
+            raise ValueError("User with this email already exists")
         return user
+
+    def find_user_by(self, **kwargs) -> User:
+        """
+        Find a user by a specified criteria
+
+        Args: 
+            **kwargs: Arbitrary keyword arguments representing query criteria
+
+        Returns:
+            User: The first User object found matching the criteria
+
+        Raises:
+            NoResultFound: If no user matches the criteria
+            InvalidRequestError: If wrong query arguments are passed
+        """
+        try:
+            user = self._session.query(User).filter_by(**kwargs).first()
+            if user is None:
+                raise NoResultFound
+            return user
+        except InvalidRequestError as e:
+            self._session.rollback()
+            raise InvalidRequestError("Invalid query arguments") from e
